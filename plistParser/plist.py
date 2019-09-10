@@ -13,6 +13,12 @@ class PList:
         if self.debug:
             print(f"[PListParser//Debug] {str(message)}")
 
+    def __update(self, object, key, value):
+        if type(object) is dict:
+            object.update({key: value})
+        elif type(object) is list:
+            object.append(value)
+
     def getParsed(self):
         if (self.parsed is not None):
             return self.parsed
@@ -24,13 +30,15 @@ class PList:
 
             root = {}
 
-            previousRoot = root
-
+            previousRoots = [root]
+            previousRoot = 0
             currentRoot = root
 
             key = ""
             value = ""
             nextIsValue = False
+
+            firstValue = False
 
             for line in dataLines:
                 if (line.startswith("<?") or line.startswith("<!") or line is ""):
@@ -47,15 +55,14 @@ class PList:
                         continue
                     tagContent = content.split(">")[0]
 
-                    self.__debug(root)
+                    #self.__debug(root)
 
                     if tagContent[0] is "/":
                         self.__debug(f"End tag <{tagContent}>")
-                        if tagContent == '/dict':
+                        if tagContent == '/dict' or tagContent == '/array':
                             self.__debug(f"/!\ This tag was a supported data holder. Restoring the root...")
-                            temp = previousRoot
-                            previousRoot = currentRoot
-                            currentRoot = temp
+                            previousRoot-=1
+                            currentRoot = previousRoots[previousRoot]
 
                     elif tagContent[len(tagContent)-1] is "/":
                         self.__debug(f"One use tag <{tagContent}>")
@@ -75,21 +82,23 @@ class PList:
                             self.__debug(f"Tag's data (inline): {tagData}")
                         elif tagContent == 'dict':
                             tagData = {}
+                        elif tagContent == 'array':
+                            tagData = []
 
-                        if nextIsValue:
+                        if nextIsValue or type(currentRoot) is list:
+                            firstValue = True
                             self.__debug(f"/!\ This tag is a value!")
                             value = tagData
-                            currentRoot.update({key: value})
-                            self.__debug(f"Added new Key-Value: {str(key)}: {str(value)}")
-                            if tagContent == 'dict':
-                                nextIsValue = True
+                            self.__update(currentRoot, key, value)
+                            self.__debug(f"Added new data: {str(key)}: {str(value)}")
                             nextIsValue = False
 
-                        if tagContent == 'dict' and nextIsValue:
-                            self.__debug(f"/!\ This tag is a supported data holder. Switching the root...")
-                            previousRoot = currentRoot
-                            currentRoot = tagData
-                            nextIsValue = False
+                        if tagContent == 'dict' or tagContent == 'array':
+                            if firstValue is not False:
+                                self.__debug(f"/!\ This tag is a supported data holder. Switching the root...")
+                                previousRoot+=1
+                                self.__update(previousRoots, '', currentRoot)
+                                currentRoot = tagData
 
                         if tagContent == 'key':
                             key = tagData
