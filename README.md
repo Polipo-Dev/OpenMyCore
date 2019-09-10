@@ -22,7 +22,7 @@ This project is only a boilerplate for getting a "working" OpenCore configuratio
 
 ## Current project milestones:
 - [ ] PList Parser/Encoder
-  - [ ] Parse PList into Python dict
+  - [x] Parse PList into Python dict
   - [ ] Encode Python dict into PList
 - [ ] Generate a bootable OpenCore folder structure
 - [ ] Copy all files from Clover to OpenCore
