@@ -1,0 +1,29 @@
+ESP
+|-EFI
+|  |-BOOT
+|  |  |-BOOTx64.efi
+|  |
+|  |-OC
+|    |-ACPI
+|    |  |-DSDT.aml
+|    |  |-SSDT-1.aml
+|    |  |-MYTABLE.aml
+|    |
+|    |-Drivers
+|    |    |-MyDriver.efi
+|    |    |-OtherDriver.efi
+|    |
+|    |-Kexts
+|    |   |-MyKext.kext
+|    |   |-OtherKext.kext
+|    |
+|    |-Tools
+|    |   |-Tool.efi
+|    |
+|    |-OpenCore.efi
+|    |-vault.plist
+|    |-config.plist
+|    |-vault.sig
+|
+|-nvram.plist
+|-opencore-YYY-MM-DD-HHMMSS.txt

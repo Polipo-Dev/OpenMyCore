@@ -16,4 +16,15 @@ You can fork the project and create pull requests to master.
 Make sure to `git pull --rebase` before doing so.
 
 ## Well, why won't my existing Clover configuration work with OpenCore already?!
-OpenCore has differences in its fundamental handling of kexts and
+OpenCore has differences in its fundamental handling of kexts, drivers, as well as a completely different config.plist.
+
+This project is only a boilerplate for getting a "working" OpenCore configuration based on your existing Clover configuration.
+
+## Current project milestones:
+- [ ] PList Parser/Encoder
+  - [ ] Parse PList into Python dict
+  - [ ] Encode Python dict into PList
+- [ ] Generate a bootable OpenCore folder structure
+- [ ] Copy all files from Clover to OpenCore
+- [ ] Generate proper (mostly ready) OpenCore Config
+- [ ] Boot!

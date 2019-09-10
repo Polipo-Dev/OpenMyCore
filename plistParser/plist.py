@@ -1,9 +1,11 @@
+__header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+
 class PList:
-    def __init__(self, plistFile: str):
+    def __init__(self, plistFile: str, debug: bool = False):
         self.file = plistFile
         self.rawText = ""
         self.parsed = None
-        self.debug = True
+        self.debug = debug
         with open(plistFile, 'r') as file:
             self.rawText = file.read()
 
@@ -19,6 +21,12 @@ class PList:
 
             # TODO: Parsing Logic [Start]
             dataLines = self.rawText.split("\n")
+
+            root = {}
+
+            previousRoot = root
+
+            currentRoot = root
 
             for line in dataLines:
                 if (line.startswith("<?") or line.startswith("<!") or line is ""):
@@ -45,7 +53,7 @@ class PList:
                         self.__debug(f"Start tag <{tagContent}>")
                         tagData = content.split(">")[1]
                         if tagData is not '':
-                            self.__debug(f"Tag's data: {tagData}")
+                            self.__debug(f"Tag's data (inline): {tagData}")
                     i+=1
             # TODO: Parsing Logic [End]
 
