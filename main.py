@@ -11,4 +11,15 @@ if len(sys.argv) is 3:
 elif len(sys.argv) is 2:
     plist = PList(sys.argv[1])
 
-print(plist.getParsed())
+# print(plist.getParsed())
+testData = {
+    "Comment": "one",
+    "Data": {
+        "help": [
+            "oh",
+            0
+        ]
+    }
+}
+
+plist.encodeDict(testData)

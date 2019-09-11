@@ -1,5 +1,3 @@
-__header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
-
 class PList:
     def __init__(self, plistFile: str, debug: bool = False):
         self.file = plistFile
@@ -60,7 +58,7 @@ class PList:
                     if tagContent[0] is "/":
                         self.__debug(f"End tag <{tagContent}>")
                         if tagContent == '/dict' or tagContent == '/array':
-                            self.__debug(f"/!\ This tag was a supported data holder. Restoring the root...")
+                            self.__debug(f"/!\\ This tag was a supported data holder. Exiting the chroot...")
                             previousRoot-=1
                             currentRoot = previousRoots[previousRoot]
 
@@ -68,11 +66,14 @@ class PList:
                         self.__debug(f"One use tag <{tagContent}>")
 
                         if nextIsValue:
-                            self.__debug(f"/!\ This tag is a value!")
+                            firstValue = True
+                            self.__debug(f"/!\\ This tag is a value!")
                             if tagContent == 'true/':
                                 value = True
                             elif tagContent == 'false/':
                                 value = False
+                            self.__update(currentRoot, key, value)
+                            self.__debug(f"Added new data: {str(key)}: {str(value)}")
                             nextIsValue = False
 
                     else:
@@ -87,15 +88,19 @@ class PList:
 
                         if nextIsValue or type(currentRoot) is list:
                             firstValue = True
-                            self.__debug(f"/!\ This tag is a value!")
+                            self.__debug(f"/!\\ This tag is a value!")
                             value = tagData
+                            if tagContent == 'integer':
+                                value = int(value)
+                            elif tagContent == 'data':
+                                value = 'DATA-'+value
                             self.__update(currentRoot, key, value)
                             self.__debug(f"Added new data: {str(key)}: {str(value)}")
                             nextIsValue = False
 
                         if tagContent == 'dict' or tagContent == 'array':
                             if firstValue is not False:
-                                self.__debug(f"/!\ This tag is a supported data holder. Switching the root...")
+                                self.__debug(f"/!\\ This tag is a supported data holder. CHRooting...")
                                 previousRoot+=1
                                 self.__update(previousRoots, '', currentRoot)
                                 currentRoot = tagData
@@ -108,3 +113,23 @@ class PList:
             # TODO: Parsing Logic [End]
 
             print(f"[PListParser] Parsed {self.file}!")
+
+    def encodeDict(self, data: dict):
+        root = data
+
+        previousRoots = []
+        rootCount = 0
+        currentRoot = root
+
+        print(f"[PListParser] Encoding dict into plist...")
+
+        encoded = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+        encoded += "<plist version=\"1.0\">\n"
+        def parse(root):
+            for object in root:
+                print(object)
+                if type(root[object]) == dict:
+                    previousRoots.append(root)
+                    rootCount+=1
+                    currentRoot = object
+                    self.__debug("/!\\ Found a supported data holder. CHRooting into it.")
