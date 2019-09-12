@@ -65,7 +65,7 @@ class PList:
                     elif tagContent[len(tagContent)-1] is "/":
                         self.__debug(f"One use tag <{tagContent}>")
 
-                        if nextIsValue:
+                        if nextIsValue or type(currentRoot) is list:
                             firstValue = True
                             self.__debug(f"/!\\ This tag is a value!")
                             if tagContent == 'true/':
@@ -123,13 +123,101 @@ class PList:
 
         print(f"[PListParser] Encoding dict into plist...")
 
-        encoded = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
-        encoded += "<plist version=\"1.0\">\n"
-        def parse(root):
-            for object in root:
-                print(object)
-                if type(root[object]) == dict:
-                    previousRoots.append(root)
+        encoded = [
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">"
+        ]
+
+        encoded.append("<plist version=\"1.0\">")
+        encoded.append("<dict>")
+
+        def parseArray(root, previousRoots, rootCount, currentRoot):
+            for value in root:
+                self.__debug(f"Array // {str(value)}")
+                if type(value) == str:
+                    if value.startswith("DATA-"):
+                        plistTag = 'data'
+                        value = value[5:]
+                    else:
+                        plistTag = 'string'
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}>{value}</{plistTag}>")
+
+                elif type(value) == int:
+                    plistTag = 'integer'
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}>{str(value)}</{plistTag}>")
+
+                elif type(value) == bool:
+                    plistTag = "true" if value else "false"
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}/>")
+
+                elif type(value) == dict:
+                    self.__debug("/!\\ Found a dict. Parsing it...")
+                    encoded.append('\t' * (rootCount + 1) + f"<dict>")
+                    previousRoots.append(currentRoot)
                     rootCount+=1
-                    currentRoot = object
-                    self.__debug("/!\\ Found a supported data holder. CHRooting into it.")
+                    currentRoot = value
+                    parse(currentRoot, previousRoots, rootCount, currentRoot)
+                    rootCount-=1
+                    currentRoot = previousRoots[rootCount]
+                    encoded.append('\t' * (rootCount + 1) + f"</dict>")
+
+                elif type(value) == list:
+                    self.__debug("/!\\ Found an array. Parsing it...")
+                    encoded.append('\t' * (rootCount + 1) + f"<array>")
+                    previousRoots.append(currentRoot)
+                    rootCount+=1
+                    currentRoot = value
+                    parseArray(currentRoot, previousRoots, rootCount, currentRoot)
+                    rootCount-=1
+                    currentRoot = previousRoots[rootCount]
+                    encoded.append('\t' * (rootCount + 1) + f"</array>")
+
+
+        def parse(root, previousRoots, rootCount, currentRoot):
+            for key, value in root.items():
+                self.__debug(f"{key}: {str(value)}")
+                encoded.append('\t' * (rootCount + 1) + f"<key>{key}</key>")
+                if type(value) == str:
+                    if value.startswith("DATA-"):
+                        plistTag = 'data'
+                        value = value[5:]
+                    else:
+                        plistTag = 'string'
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}>{value}</{plistTag}>")
+
+                elif type(value) == int:
+                    plistTag = 'integer'
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}>{str(value)}</{plistTag}>")
+
+                elif type(value) == bool:
+                    plistTag = "true" if value else "false"
+                    encoded.append('\t' * (rootCount + 1) + f"<{plistTag}/>")
+
+                elif type(value) == dict:
+                    self.__debug("/!\\ Found a dict. Parsing it...")
+                    encoded.append('\t' * (rootCount + 1) + f"<dict>")
+                    previousRoots.append(currentRoot)
+                    rootCount+=1
+                    currentRoot = value
+                    parse(currentRoot, previousRoots, rootCount, currentRoot)
+                    rootCount-=1
+                    currentRoot = previousRoots[rootCount]
+                    encoded.append('\t' * (rootCount + 1) + f"</dict>")
+
+                elif type(value) == list:
+                    self.__debug("/!\\ Found an array. Parsing it...")
+                    encoded.append('\t' * (rootCount + 1) + f"<array>")
+                    previousRoots.append(currentRoot)
+                    rootCount+=1
+                    currentRoot = value
+                    parseArray(currentRoot, previousRoots, rootCount, currentRoot)
+                    rootCount-=1
+                    currentRoot = previousRoots[rootCount]
+                    encoded.append('\t' * (rootCount + 1) + f"</array>")
+
+        parse(currentRoot, previousRoots, rootCount, currentRoot)
+
+        encoded.append("</dict>")
+        encoded.append("</plist>")
+
+        return "\n".join(encoded)
